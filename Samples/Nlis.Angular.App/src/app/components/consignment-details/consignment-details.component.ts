@@ -23,8 +23,11 @@ export class ConsignmentDetailsComponent implements OnInit, OnDestroy {
   private selectedProgram: string = '';
   private selectedFormSchema: any = {};
   private selectedFormModel: any = {};
+  private selectedFormLayout: any = {};
   private isLoading: boolean = false;
   private materialDesign: string = 'bootstrap-3';
+
+  public isPrintMode = false;
 
   constructor(private http: Http, private route: ActivatedRoute) { }
 
@@ -32,7 +35,10 @@ export class ConsignmentDetailsComponent implements OnInit, OnDestroy {
     this.headers.set('Authorization', localStorage.getItem('Authorization'));
     this.headers.set('Accept', 'application/json');
 
+    this.headers.set('Access-Control-Allow-Origin', '*');
+
     this.isLoading = true;
+
     this.route.paramMap.switchMap((params: ParamMap) => this.getConsignmentDetails(params.get('id')))
     .toPromise();
   }
@@ -68,7 +74,12 @@ export class ConsignmentDetailsComponent implements OnInit, OnDestroy {
         .toPromise()
         .then(res => { return res.json(); });
 
-      return Promise.all([schemaPromise, modelPromise]).then(values =>{
+      let layoutPromise = this.http.get(`${this.apiUrl}/forms/${this.selectedProgram}/$view`,
+        { headers: this.headers })
+        .toPromise()
+        .then(res => { return res.json(); });
+
+      return Promise.all([schemaPromise, modelPromise, layoutPromise]).then(values =>{
         return values;
       });
   }
@@ -114,6 +125,21 @@ export class ConsignmentDetailsComponent implements OnInit, OnDestroy {
         .then(result => {
           this.selectedFormSchema = result[0];
           this.selectedFormModel = result[1].Value.Payload;
+          const formLayout = result[2].Value.Payload[0].items;
+
+          formLayout.shift();
+
+          let layoutStr = JSON.stringify(formLayout);
+          // layoutStr = layoutStr.replace(/label-text/g, 'text');
+          layoutStr = layoutStr.replace(/!isPrintMode/g, '');
+
+          console.log('this.selectedFormLayout', layoutStr);
+          console.log('this.selectedFormModel',JSON.stringify(this.selectedFormModel));
+          console.log('this.selectedFormSchema',JSON.stringify(this.selectedFormSchema));
+
+          this.selectedFormLayout = JSON.parse(layoutStr);
+
+          this.selectedFormModel.isPrintMode = false;
           this.isLoading = false;
         });
       })

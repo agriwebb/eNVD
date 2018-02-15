@@ -30,7 +30,7 @@ export class ConsignmentListingComponent implements OnInit {
   }
 
   private onConsignmentLinkClicked(cid: string) {
-    
+
     this.onConsignmentDetailsClicked.emit(cid);
   }
 
@@ -45,6 +45,7 @@ export class ConsignmentListingComponent implements OnInit {
     let headers = new Headers();
     headers.set('Authorization', localStorage.getItem('Authorization'));
     headers.set('Accept', 'application/json');
+    headers.set('Access-Control-Allow-Origin', '*');
 
     return this.http.get(`${this.apiUrl}?${this.getQueryStringParams()}`, { headers })
       .map(res => { return res.json(); });
@@ -54,7 +55,7 @@ export class ConsignmentListingComponent implements OnInit {
     let params = new URLSearchParams();
     if(this.consignmentNumber.length > 0)
       params.set('consignmentNumber', this.consignmentNumber);
-    
+
     params.set('noDraft', (!this.includeDrafts).toString());
     params.set('pageSize', this.pageSize.toString());
     if(this.nextPageToken.length > 0)
